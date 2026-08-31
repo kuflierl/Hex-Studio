@@ -157,11 +157,13 @@ fisherman stack ctx =
                     case iota of
                         Number number ->
                             let
+                                idx = round number
+
                                 newNewStack =
-                                    removeFromArray (round number - 1) (round number) newStack
+                                    removeFromArray idx (idx + 1) newStack
 
                                 maybeCaughtIota =
-                                    Array.get (round number - 1) newStack
+                                    Array.get idx newStack
                             in
                             case maybeCaughtIota of
                                 Nothing ->
