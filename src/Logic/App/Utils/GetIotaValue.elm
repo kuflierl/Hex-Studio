@@ -12,12 +12,12 @@ getIotaValueAsHtmlMsg index iota indent =
     let
         renderList list =
             Array.toList list
-                |> List.indexedMap (\i x -> getIotaValueAsHtmlMsg (i - 1) x (indent + 1))
+                |> List.indexedMap (\i x -> getIotaValueAsHtmlMsg i x (indent + 1))
                 |> List.concat
                 |> (++)
                     [ div [ class "outer_box", style "background-color" (iotaColorMap iota), style "margin-left" (String.fromInt (indent * 26) ++ "px") ]
                         [ div [ class "inner_box" ]
-                            [ div [ class "index_display" ] [ text (String.fromInt (index + 1)) ]
+                            [ div [ class "index_display" ] [ text (String.fromInt index) ]
                             , div [ class "text", style "margin-right" "6.8px" ] [ div [] [ p [] [ text "List" ] ] ]
                             ]
                         ]
@@ -33,7 +33,7 @@ getIotaValueAsHtmlMsg index iota indent =
         _ ->
             [ div [ class "outer_box", style "background-color" (iotaColorMap iota), style "margin-left" (String.fromInt (indent * 26) ++ "px") ]
                 [ div [ class "inner_box" ]
-                    [ div [ class "index_display" ] [ text (String.fromInt (index + 1)) ]
+                    [ div [ class "index_display" ] [ text (String.fromInt index) ]
                     , div [ class "text", style "margin-right" "6.8px" ] [ div [] [ p [] [ text (getIotaValueAsString iota) ] ] ]
                     ]
                 ]
