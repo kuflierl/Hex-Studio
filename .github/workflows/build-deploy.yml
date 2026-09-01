@@ -1,0 +1,80 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    # Set ELM_HOME so Elm stores packages in the local .elm folder
+    env:
+      ELM_HOME: ".elm"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: jorelali/setup-elm@v6
+        with:
+            elm-version: 0.19.1
+
+      # Caching Elm dependencies in the local .elm directory
+      - name: Cache Elm packages
+        uses: actions/cache@v4
+        with:
+          path: .elm
+          key: ${{ runner.os }}-elm-deps-${{ hashFiles('elm.json') }}
+          restore-keys: |
+            ${{ runner.os }}-elm-deps-
+
+      - name: Lint
+        run: echo "Linting not yet implemented"
+
+      - name: Compile
+        run: elm make src/Main.elm --output gen/source.js --optimize
+
+      - name: Test
+        run: echo "Testing not yet implemented"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-site
+          path: |
+            index.html
+            gen/
+
+  deploy:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: static-site
+          path: '.'
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
