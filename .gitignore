@@ -4,6 +4,7 @@ elm-stuff
 node_modules
 dist
 vscode/settings.json
+gen/source.js
 # Devenv
 .devenv*
 devenv.local.nix
