@@ -19935,7 +19935,7 @@ var $author$project$Logic$App$Utils$GetIotaValue$getIotaValueAsHtmlMsg = F3(
 										_List_fromArray(
 											[
 												$elm$html$Html$text(
-												$elm$core$String$fromInt(index + 1))
+												$elm$core$String$fromInt(index))
 											])),
 										A2(
 										$elm$html$Html$div,
@@ -19968,7 +19968,7 @@ var $author$project$Logic$App$Utils$GetIotaValue$getIotaValueAsHtmlMsg = F3(
 						$elm$core$List$indexedMap,
 						F2(
 							function (i, x) {
-								return A3($author$project$Logic$App$Utils$GetIotaValue$getIotaValueAsHtmlMsg, i - 1, x, indent + 1);
+								return A3($author$project$Logic$App$Utils$GetIotaValue$getIotaValueAsHtmlMsg, i, x, indent + 1);
 							}),
 						$elm$core$Array$toList(list))));
 		};
@@ -20015,7 +20015,7 @@ var $author$project$Logic$App$Utils$GetIotaValue$getIotaValueAsHtmlMsg = F3(
 										_List_fromArray(
 											[
 												$elm$html$Html$text(
-												$elm$core$String$fromInt(index + 1))
+												$elm$core$String$fromInt(index))
 											])),
 										A2(
 										$elm$html$Html$div,
