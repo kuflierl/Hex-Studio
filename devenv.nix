@@ -21,7 +21,7 @@
 
   # https://devenv.sh/processes/
   processes = {
-    server.exec = "elm-live src/Main.elm --open --  --output gen/source.js";
+    server.exec = "elm-live src/Main.elm --open --  --output gen/source.js --optimize";
   };
 
   scripts = {
