@@ -6,7 +6,7 @@ import FontAwesome.Attributes exposing (stack)
 import Html.Attributes exposing (action)
 import Logic.App.Patterns.OperatorUtils exposing (action1Input, action2Inputs, action3Inputs, actionNoInput, getAny, getInteger)
 import Logic.App.Types exposing (ActionResult, CastingContext, Iota(..), Mishap(..))
-import Logic.App.Utils.Utils exposing (removeFromArray, unshift)
+import Logic.App.Utils.Utils exposing (insertArray, removeFromArray, unshift)
 import Maybe.Extra as Maybe
 
 
@@ -157,20 +157,45 @@ fisherman stack ctx =
                     case iota of
                         Number number ->
                             let
-                                idx = round number
-
-                                newNewStack =
-                                    removeFromArray idx (idx + 1) newStack
-
-                                maybeCaughtIota =
-                                    Array.get idx newStack
+                                depth =
+                                    round number
                             in
-                            case maybeCaughtIota of
-                                Nothing ->
-                                    { stack = unshift (Garbage NotEnoughIotas) stack, ctx = ctx, success = False }
+                            if depth >= 0 then
+                                let
+                                    newNewStack =
+                                        removeFromArray depth (depth + 1) newStack
 
-                                Just caughtIota ->
-                                    { stack = unshift caughtIota newNewStack, ctx = ctx, success = True }
+                                    maybeCaughtIota =
+                                        Array.get depth newStack
+                                in
+                                case maybeCaughtIota of
+                                    Nothing ->
+                                        { stack = unshift (Garbage NotEnoughIotas) stack, ctx = ctx, success = False }
+
+                                    Just caughtIota ->
+                                        { stack = unshift caughtIota newNewStack, ctx = ctx, success = True }
+
+                            else
+                                let
+                                    n =
+                                        abs depth
+
+                                    maybeTop =
+                                        Array.get 0 newStack
+                                in
+                                case maybeTop of
+                                    Nothing ->
+                                        { stack = unshift (Garbage NotEnoughIotas) stack, ctx = ctx, success = False }
+
+                                    Just topIota ->
+                                        let
+                                            rest =
+                                                Array.slice 1 (Array.length newStack) newStack
+
+                                            inserted =
+                                                insertArray n topIota rest
+                                        in
+                                        { stack = inserted, ctx = ctx, success = True }
 
                         _ ->
                             { stack = unshift (Garbage CatastrophicFailure) stack, ctx = ctx, success = False }
@@ -198,15 +223,39 @@ fishermanCopy stack ctx =
                     case iota of
                         Number number ->
                             let
-                                maybeCaughtIota =
-                                    Array.get (round number) newStack
+                                depth =
+                                    round number
                             in
-                            case maybeCaughtIota of
-                                Nothing ->
-                                    { stack = unshift (Garbage NotEnoughIotas) stack, ctx = ctx, success = False }
+                            if depth >= 0 then
+                                let
+                                    maybeCaughtIota =
+                                        Array.get depth newStack
+                                in
+                                case maybeCaughtIota of
+                                    Nothing ->
+                                        { stack = unshift (Garbage NotEnoughIotas) stack, ctx = ctx, success = False }
 
-                                Just caughtIota ->
-                                    { stack = unshift caughtIota newStack, ctx = ctx, success = True }
+                                    Just caughtIota ->
+                                        { stack = unshift caughtIota newStack, ctx = ctx, success = True }
+
+                            else
+                                let
+                                    n =
+                                        abs depth
+
+                                    maybeTop =
+                                        Array.get 0 newStack
+                                in
+                                case maybeTop of
+                                    Nothing ->
+                                        { stack = unshift (Garbage NotEnoughIotas) stack, ctx = ctx, success = False }
+
+                                    Just topIota ->
+                                        let
+                                             inserted =
+                                                 insertArray n topIota newStack
+                                        in
+                                        { stack = inserted, ctx = ctx, success = True }
 
                         _ ->
                             { stack = unshift (Garbage CatastrophicFailure) stack, ctx = ctx, success = False }
