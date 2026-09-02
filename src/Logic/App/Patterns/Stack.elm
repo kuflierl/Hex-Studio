@@ -252,8 +252,8 @@ fishermanCopy stack ctx =
 
                                     Just topIota ->
                                         let
-                                             inserted =
-                                                 insertArray n topIota newStack
+                                            inserted =
+                                                insertArray (n + 1) topIota newStack
                                         in
                                         { stack = inserted, ctx = ctx, success = True }
 
