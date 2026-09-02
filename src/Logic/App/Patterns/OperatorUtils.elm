@@ -247,6 +247,9 @@ getPatternOrIotaList iota =
         IotaList _ ->
             Just iota
 
+        ContinuationIota _ ->
+            Just iota
+
         _ ->
             Nothing
 

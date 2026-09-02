@@ -60,5 +60,8 @@ iotaColorMap iota =
         Garbage _ ->
             "#4F3737"
 
+        ContinuationIota _ ->
+            "#4B4845"
+
         OpenParenthesis _ ->
             "#4B4845"

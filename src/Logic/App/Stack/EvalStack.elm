@@ -87,14 +87,26 @@ applyToStackLoop stackResultTuple ctx patterns currentIndex timeline considerThi
 
             else
                 let
+                    restPatterns =
+                        Maybe.withDefault [] <| List.tail patterns
+
                     applyResult =
-                        applyPatternToStack stack ctx pattern currentIndex
+                        applyPatternToStack stack ctx pattern currentIndex restPatterns
                 in
-                if not stopAtErrorOrHalt || (stopAtErrorOrHalt && applyResult.result /= Failed) then
+                if applyResult.halted then
+                    { stack = applyResult.stack
+                    , resultArray = unshift applyResult.result resultArray
+                    , ctx = applyResult.ctx
+                    , error = False
+                    , halted = True
+                    , timeline = Array.append applyResult.timeline timeline
+                    }
+
+                else if not stopAtErrorOrHalt || (stopAtErrorOrHalt && applyResult.result /= Failed) then
                     applyToStackLoop
                         ( applyResult.stack, unshift applyResult.result resultArray )
                         applyResult.ctx
-                        (Maybe.withDefault [] <| List.tail patterns)
+                        restPatterns
                         (currentIndex + 1)
                         (Array.append applyResult.timeline timeline)
                         applyResult.considerNext
@@ -108,6 +120,42 @@ applyToStackLoop stackResultTuple ctx patterns currentIndex timeline considerThi
                     , halted = False
                     , timeline = unshift { stack = applyResult.stack, patternIndex = currentIndex } timeline
                     }
+
+        Just (ContinuationIota continuationState) ->
+            if considerThis || introspection then
+                let
+                    applyResult =
+                        ( addEscapedIotaToStack stack (ContinuationIota continuationState), unshift Considered resultArray )
+                in
+                applyToStackLoop
+                    applyResult
+                    ctx
+                    (Maybe.withDefault [] <| List.tail patterns)
+                    (currentIndex + 1)
+                    (unshift { stack = Tuple.first applyResult, patternIndex = currentIndex } timeline)
+                    False
+                    stopAtErrorOrHalt
+
+            else
+                let
+                    executed =
+                        if Array.isEmpty continuationState.stack then
+                            { stack = stack, ctx = continuationState.ctx, error = False, timeline = timeline }
+
+                        else
+                            let
+                                res =
+                                    applyToStackStopAtErrorOrHalt stack continuationState.ctx continuationState.stack
+                            in
+                            { stack = res.stack, ctx = res.ctx, error = res.error, timeline = Array.append res.timeline timeline }
+                in
+                { stack = executed.stack
+                , resultArray = unshift Succeeded resultArray
+                , ctx = executed.ctx
+                , error = executed.error
+                , halted = True
+                , timeline = executed.timeline
+                }
 
         Just iota ->
             if considerThis || introspection then
@@ -128,8 +176,8 @@ applyToStackLoop stackResultTuple ctx patterns currentIndex timeline considerThi
                 { stack = stack, resultArray = resultArray, ctx = ctx, error = True, halted = False, timeline = timeline }
 
 
-applyPatternToStack : Array Iota -> CastingContext -> Pattern -> Int -> { stack : Array Iota, result : ApplyToStackResult, ctx : CastingContext, considerNext : Bool, timeline : Timeline }
-applyPatternToStack stack ctx pattern index =
+applyPatternToStack : Array Iota -> CastingContext -> Pattern -> Int -> List Iota -> { stack : Array Iota, result : ApplyToStackResult, ctx : CastingContext, considerNext : Bool, halted : Bool, timeline : Timeline }
+applyPatternToStack stack ctx pattern index restPatterns =
     case Array.get 0 stack of
         -- if intro on top of stack
         Just (OpenParenthesis list) ->
@@ -167,7 +215,7 @@ applyPatternToStack stack ctx pattern index =
                     Array.set 0 (OpenParenthesis (Array.push (PatternIota pattern False) list)) stack
             in
             if pattern.internalName == "escape" then
-                { stack = stack, result = Succeeded, ctx = ctx, considerNext = True, timeline = Array.fromList [ { stack = stack, patternIndex = index } ] }
+                { stack = stack, result = Succeeded, ctx = ctx, considerNext = True, halted = False, timeline = Array.fromList [ { stack = stack, patternIndex = index } ] }
 
             else if pattern.internalName == "close_paren" then
                 if pattern.internalName == "close_paren" && (numberOfCloseParen + 1) >= numberOfOpenParen then
@@ -188,22 +236,23 @@ applyPatternToStack stack ctx pattern index =
                     , result = Succeeded
                     , ctx = ctx
                     , considerNext = False
+                    , halted = False
                     , timeline = Array.fromList [ { stack = newStack, patternIndex = index } ]
                     }
 
                 else
-                    { stack = addToIntroList, result = Considered, ctx = ctx, considerNext = False, timeline = Array.fromList [ { stack = addToIntroList, patternIndex = index } ] }
+                    { stack = addToIntroList, result = Considered, ctx = ctx, considerNext = False, halted = False, timeline = Array.fromList [ { stack = addToIntroList, patternIndex = index } ] }
 
             else
-                { stack = addToIntroList, result = Considered, ctx = ctx, considerNext = False, timeline = Array.fromList [ { stack = addToIntroList, patternIndex = index } ] }
+                { stack = addToIntroList, result = Considered, ctx = ctx, considerNext = False, halted = False, timeline = Array.fromList [ { stack = addToIntroList, patternIndex = index } ] }
 
         _ ->
             -- if no intro on top
             if pattern.internalName == "escape" then
-                { stack = stack, result = Succeeded, ctx = ctx, considerNext = True, timeline = Array.fromList [ { stack = stack, patternIndex = index } ] }
+                { stack = stack, result = Succeeded, ctx = ctx, considerNext = True, halted = False, timeline = Array.fromList [ { stack = stack, patternIndex = index } ] }
 
             else if pattern.internalName == "close_paren" then
-                { stack = unshift (PatternIota pattern False) stack, result = Failed, ctx = ctx, considerNext = False, timeline = Array.fromList [ { stack = stack, patternIndex = index } ] }
+                { stack = unshift (PatternIota pattern False) stack, result = Failed, ctx = ctx, considerNext = False, halted = False, timeline = Array.fromList [ { stack = stack, patternIndex = index } ] }
 
             else if pattern.internalName == "eval" then
                 --special cases for eval and for_each because they need to return multiple stack states for the timeline
@@ -216,6 +265,7 @@ applyPatternToStack stack ctx pattern index =
                     , result = Succeeded
                     , ctx = actionResult.ctx
                     , considerNext = False
+                    , halted = actionResult.halted
                     , timeline = Array.map (\x -> { stack = x, patternIndex = index }) actionResult.allStackStates
                     }
 
@@ -224,6 +274,30 @@ applyPatternToStack stack ctx pattern index =
                     , result = Failed
                     , ctx = actionResult.ctx
                     , considerNext = False
+                    , halted = actionResult.halted
+                    , timeline = Array.map (\x -> { stack = x, patternIndex = index }) actionResult.allStackStates
+                    }
+
+            else if pattern.internalName == "eval_cc" then
+                let
+                    actionResult =
+                        evalCC stack ctx restPatterns
+                in
+                if actionResult.success == True then
+                    { stack = actionResult.stack
+                    , result = Succeeded
+                    , ctx = actionResult.ctx
+                    , considerNext = False
+                    , halted = False
+                    , timeline = Array.map (\x -> { stack = x, patternIndex = index }) actionResult.allStackStates
+                    }
+
+                else
+                    { stack = actionResult.stack
+                    , result = Failed
+                    , ctx = actionResult.ctx
+                    , considerNext = False
+                    , halted = False
                     , timeline = Array.map (\x -> { stack = x, patternIndex = index }) actionResult.allStackStates
                     }
 
@@ -237,6 +311,7 @@ applyPatternToStack stack ctx pattern index =
                     , result = Succeeded
                     , ctx = actionResult.ctx
                     , considerNext = False
+                    , halted = False
                     , timeline = Array.map (\x -> { stack = x, patternIndex = index }) actionResult.allStackStates
                     }
 
@@ -245,6 +320,7 @@ applyPatternToStack stack ctx pattern index =
                     , result = Failed
                     , ctx = actionResult.ctx
                     , considerNext = False
+                    , halted = False
                     , timeline = Array.map (\x -> { stack = x, patternIndex = index }) actionResult.allStackStates
                     }
 
@@ -260,6 +336,7 @@ applyPatternToStack stack ctx pattern index =
                             , result = Succeeded
                             , ctx = actionResult.ctx
                             , considerNext = False
+                            , halted = actionResult.halted
                             , timeline = Array.map (\x -> { stack = x, patternIndex = index }) actionResult.allStackStates
                             }
 
@@ -268,6 +345,7 @@ applyPatternToStack stack ctx pattern index =
                             , result = Failed
                             , ctx = actionResult.ctx
                             , considerNext = False
+                            , halted = actionResult.halted
                             , timeline = Array.map (\x -> { stack = x, patternIndex = index }) actionResult.allStackStates
                             }
 
@@ -285,10 +363,10 @@ applyPatternToStack stack ctx pattern index =
                                     preActionResult
                         in
                         if actionResult.success == True then
-                            { stack = actionResult.stack, result = Succeeded, ctx = actionResult.ctx, considerNext = False, timeline = Array.fromList [ { stack = actionResult.stack, patternIndex = index } ] }
+                            { stack = actionResult.stack, result = Succeeded, ctx = actionResult.ctx, considerNext = False, halted = False, timeline = Array.fromList [ { stack = actionResult.stack, patternIndex = index } ] }
 
                         else
-                            { stack = actionResult.stack, result = Failed, ctx = actionResult.ctx, considerNext = False, timeline = Array.fromList [ { stack = actionResult.stack, patternIndex = index } ] }
+                            { stack = actionResult.stack, result = Failed, ctx = actionResult.ctx, considerNext = False, halted = False, timeline = Array.fromList [ { stack = actionResult.stack, patternIndex = index } ] }
 
 
 addEscapedIotaToStack : Array Iota -> Iota -> Array Iota
@@ -301,8 +379,79 @@ addEscapedIotaToStack stack iota =
             unshift iota stack
 
 
-eval : Array Iota -> CastingContext -> { stack : Array Iota, ctx : CastingContext, success : Bool, allStackStates : Array (Array Iota) }
+eval : Array Iota -> CastingContext -> { stack : Array Iota, ctx : CastingContext, success : Bool, halted : Bool, allStackStates : Array (Array Iota) }
 eval stack ctx =
+    let
+        maybeIota =
+            Array.get 0 stack
+
+        newStack =
+            Array.slice 1 (Array.length stack) stack
+    in
+    case maybeIota of
+        Nothing ->
+            { stack = unshift (Garbage NotEnoughIotas) newStack, ctx = ctx, success = False, halted = False, allStackStates = Array.fromList [ unshift (Garbage NotEnoughIotas) newStack ] }
+
+        Just iota ->
+            case iota of
+                IotaList list ->
+                    let
+                        applyResult =
+                            applyToStackStopAtErrorOrHalt
+                                newStack
+                                ctx
+                                list
+                    in
+                    { stack =
+                        Array.filter
+                            (\i ->
+                                case i of
+                                    OpenParenthesis _ ->
+                                        False
+
+                                    _ ->
+                                        True
+                            )
+                            applyResult.stack
+                    , ctx = applyResult.ctx
+                    , success = not applyResult.error
+                    , halted = applyResult.halted
+                    , allStackStates = Array.map (\x -> x.stack) applyResult.timeline
+                    }
+
+                PatternIota pattern _ ->
+                    let
+                        applyResult =
+                            applyToStackStopAtErrorOrHalt newStack ctx (Array.fromList [ PatternIota pattern False ])
+                    in
+                    { stack = applyResult.stack, ctx = applyResult.ctx, success = not applyResult.error, halted = applyResult.halted, allStackStates = Array.map (\x -> x.stack) applyResult.timeline }
+
+                ContinuationIota continuationState ->
+                    let
+                        resumeResult =
+                            if Array.isEmpty continuationState.stack then
+                                { stack = newStack, ctx = continuationState.ctx, success = True, halted = True, allStackStates = Array.fromList [ newStack ] }
+
+                            else
+                                let
+                                    restored =
+                                        applyToStackStopAtErrorOrHalt newStack continuationState.ctx continuationState.stack
+                                in
+                                { stack = restored.stack
+                                , ctx = restored.ctx
+                                , success = not restored.error
+                                , halted = True
+                                , allStackStates = Array.map (\x -> x.stack) restored.timeline
+                                }
+                    in
+                    resumeResult
+
+                _ ->
+                    { stack = unshift iota newStack, ctx = ctx, success = True, halted = False, allStackStates = Array.fromList [ unshift iota newStack ] }
+
+
+evalCC : Array Iota -> CastingContext -> List Iota -> { stack : Array Iota, ctx : CastingContext, success : Bool, allStackStates : Array (Array Iota) }
+evalCC stack ctx restPatterns =
     let
         maybeIota =
             Array.get 0 stack
@@ -315,45 +464,26 @@ eval stack ctx =
             { stack = unshift (Garbage NotEnoughIotas) newStack, ctx = ctx, success = False, allStackStates = Array.fromList [ unshift (Garbage NotEnoughIotas) newStack ] }
 
         Just iota ->
-            case getPatternOrIotaList <| iota of
+            case getPatternOrIotaList iota of
                 Nothing ->
                     { stack = unshift (Garbage IncorrectIota) newStack, ctx = ctx, success = False, allStackStates = Array.fromList [ unshift (Garbage IncorrectIota) newStack ] }
 
                 _ ->
-                    case iota of
-                        IotaList list ->
-                            let
-                                applyResult =
-                                    applyToStackStopAtErrorOrHalt
-                                        newStack
-                                        ctx
-                                        list
-                            in
-                            { stack =
-                                Array.filter
-                                    (\i ->
-                                        case i of
-                                            OpenParenthesis _ ->
-                                                False
+                    let
+                        continuationState =
+                            { stack = Array.fromList restPatterns, ctx = ctx }
 
-                                            _ ->
-                                                True
-                                    )
-                                    applyResult.stack
-                            , ctx = applyResult.ctx
-                            , success = not applyResult.error
-                            , allStackStates = Array.map (\x -> x.stack) applyResult.timeline
-                            }
+                        continuationStack =
+                            Array.append (Array.fromList [ iota, ContinuationIota continuationState ]) newStack
 
-                        PatternIota pattern _ ->
-                            let
-                                applyResult =
-                                    applyToStackStopAtErrorOrHalt newStack ctx (Array.fromList [ PatternIota pattern False ])
-                            in
-                            { stack = applyResult.stack, ctx = applyResult.ctx, success = not applyResult.error, allStackStates = Array.map (\x -> x.stack) applyResult.timeline }
-
-                        _ ->
-                            { stack = Array.fromList [ Garbage CatastrophicFailure ], ctx = ctx, success = False, allStackStates = Array.fromList [ Array.fromList [ Garbage CatastrophicFailure ] ] }
+                        actionResult =
+                            eval continuationStack ctx
+                    in
+                    { stack = actionResult.stack
+                    , ctx = actionResult.ctx
+                    , success = actionResult.success
+                    , allStackStates = actionResult.allStackStates
+                    }
 
 
 forEach : Array Iota -> CastingContext -> { stack : Array Iota, ctx : CastingContext, success : Bool, allStackStates : Array (Array Iota) }

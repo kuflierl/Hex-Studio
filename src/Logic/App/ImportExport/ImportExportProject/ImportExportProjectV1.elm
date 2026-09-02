@@ -54,6 +54,12 @@ type alias SimplifiedPattern =
     }
 
 
+type alias SimplifiedContinuationState =
+    { stack : Array SimplifiedIota
+    , ctx : SimplifiedCastingContext
+    }
+
+
 type SimplifiedIota
     = SimplifiedNumber Float
     | SimplifiedVector ( Float, Float, Float )
@@ -64,6 +70,7 @@ type SimplifiedIota
     | SimplifiedNull
     | SimplifiedGarbage Mishap
     | SimplifiedOpenParenthesis (Array SimplifiedIota)
+    | SimplifiedContinuationIota SimplifiedContinuationState
 
 
 patternCodec : S.Codec e SimplifiedPattern
@@ -121,6 +128,12 @@ simplifyIota iota =
         OpenParenthesis list ->
             SimplifiedOpenParenthesis (Array.map simplifyIota list)
 
+        ContinuationIota continuationState ->
+            SimplifiedContinuationIota
+                { stack = Array.map simplifyIota continuationState.stack
+                , ctx = simplifyCastingContext continuationState.ctx
+                }
+
 
 unSimplifyIota : Dict String ( String, Direction, Iota ) -> SimplifiedIota -> Iota
 unSimplifyIota macros simplifiedIota =
@@ -151,6 +164,12 @@ unSimplifyIota macros simplifiedIota =
 
         SimplifiedOpenParenthesis list ->
             OpenParenthesis (Array.map (unSimplifyIota macros) list)
+
+        SimplifiedContinuationIota continuationState ->
+            ContinuationIota
+                { stack = Array.map (unSimplifyIota macros) continuationState.stack
+                , ctx = unSimplifyCastingContext continuationState.ctx
+                }
 
 
 patternArrayCodec : S.Codec e (Array SimplifiedPattern)
@@ -254,10 +273,18 @@ mishapCodec =
         |> S.finishCustomType
 
 
+continuationStateCodec : S.Codec e SimplifiedContinuationState
+continuationStateCodec =
+    S.record SimplifiedContinuationState
+        |> S.field .stack (S.array (S.lazy (\() -> iotaCodec)))
+        |> S.field .ctx (S.lazy (\() -> castingContextCodec))
+        |> S.finishRecord
+
+
 iotaCodec : S.Codec e SimplifiedIota
 iotaCodec =
     S.customType
-        (\numberEncoder vectorEncoder booleanEncoder entityEncoder iotaListEncoder patternIotaEncoder nullEncoder garbageEncoder openParenthesisEncoder value ->
+        (\numberEncoder vectorEncoder booleanEncoder entityEncoder iotaListEncoder patternIotaEncoder nullEncoder garbageEncoder openParenthesisEncoder continuationEncoder value ->
             case value of
                 SimplifiedNumber number ->
                     numberEncoder number
@@ -285,6 +312,9 @@ iotaCodec =
 
                 SimplifiedOpenParenthesis list ->
                     openParenthesisEncoder list
+
+                SimplifiedContinuationIota continuationState ->
+                    continuationEncoder continuationState
         )
         |> S.variant1 SimplifiedNumber S.float
         |> S.variant1 SimplifiedVector (S.triple S.float S.float S.float)
@@ -295,6 +325,7 @@ iotaCodec =
         |> S.variant0 SimplifiedNull
         |> S.variant1 SimplifiedGarbage mishapCodec
         |> S.variant1 SimplifiedOpenParenthesis (S.array (S.lazy (\() -> iotaCodec)))
+        |> S.variant1 SimplifiedContinuationIota continuationStateCodec
         |> S.finishCustomType
 
 

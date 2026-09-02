@@ -15,6 +15,7 @@ import Logic.App.Patterns.ReadWrite exposing (..)
 import Logic.App.Patterns.Selectors exposing (..)
 import Logic.App.Patterns.Spells exposing (..)
 import Logic.App.Patterns.Stack exposing (..)
+import Logic.App.Stack.EvalStack exposing (eval, evalCC)
 import Logic.App.Types exposing (ActionResult, ApplyToStackResult(..), CastingContext, Direction(..), HeldItem(..), Iota(..), IotaType(..), MetaActionMsg(..), Mishap(..), Pattern)
 import Logic.App.Utils.RegexPatterns exposing (bookkeepersPattern)
 import Logic.App.Utils.Utils exposing (ifThenElse, unshift)
@@ -27,6 +28,15 @@ import Settings.Theme exposing (..)
 noAction : Array Iota -> CastingContext -> ActionResult
 noAction stack ctx =
     { stack = stack, ctx = ctx, success = True }
+
+
+evalCCAction : Array Iota -> CastingContext -> ActionResult
+evalCCAction stack ctx =
+    let
+        actionResult =
+            evalCC stack ctx []
+    in
+    { stack = actionResult.stack, ctx = actionResult.ctx, success = actionResult.success }
 
 
 unknownPattern : Pattern
@@ -554,6 +564,7 @@ patternRegistry =
     , { signature = "qqq", internalName = "open_paren", action = makeConstant (OpenParenthesis Array.empty), displayName = "Introspection", outputOptions = [], selectedOutput = Nothing, startDirection = West }
     , { signature = "eee", internalName = "close_paren", action = noAction, displayName = "Retrospection", outputOptions = [], selectedOutput = Nothing, startDirection = East }
     , { signature = "deaqq", internalName = "eval", action = noAction, displayName = "Hermes' Gambit", outputOptions = [], selectedOutput = Nothing, startDirection = Southeast }
+    , { signature = "qwaqde", internalName = "eval_cc", action = evalCCAction, displayName = "Iris' Gambit", outputOptions = [], selectedOutput = Nothing, startDirection = Northwest }
     , { signature = "dadad", internalName = "for_each", action = noAction, displayName = "Thoth's Gambit", outputOptions = [], selectedOutput = Nothing, startDirection = Northeast }
     , { signature = "awaawa", internalName = "save_macro", action = saveMacro, displayName = "Save Macro", outputOptions = [], selectedOutput = Nothing, startDirection = Southeast }
     ]

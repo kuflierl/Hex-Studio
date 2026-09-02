@@ -64,6 +64,9 @@ getIotaTypeAsString iota =
         PatternType ->
             "Pattern"
 
+        ContinuationType ->
+            "Continuation"
+
         GarbageType ->
             "Garbage"
 
@@ -114,6 +117,9 @@ getIotaValueAsString iota =
 
         PatternIota pattern _ ->
             pattern.displayName
+
+        ContinuationIota _ ->
+            "Continuation"
 
         Garbage mishap ->
             let

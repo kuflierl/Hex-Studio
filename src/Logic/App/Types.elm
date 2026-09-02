@@ -75,6 +75,13 @@ type IotaType
     | PatternType
     | NullType
     | GarbageType
+    | ContinuationType
+
+
+type alias ContinuationState =
+    { stack : Array Iota
+    , ctx : CastingContext
+    }
 
 
 type Iota
@@ -87,6 +94,7 @@ type Iota
     | Null
     | Garbage Mishap
     | OpenParenthesis (Array Iota)
+    | ContinuationIota ContinuationState
 
 
 type alias GridPoint =
