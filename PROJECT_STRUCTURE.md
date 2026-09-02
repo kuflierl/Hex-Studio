@@ -1,58 +1,82 @@
-# Project Structure: Hex-Studio
+# Project Structure & Comprehensive Hex Implementation: Hex-Studio
 
-Hex-Studio is an Elm-based implementation and interactive studio for **Hex Casting** (a Minecraft mod centered around stack-based spell programming and meta-evaluation).
+Hex-Studio is an Elm implementation and interactive studio for **Hex Casting**. This document details the project's architecture, code flow, and the complete inventory of hexes/patterns implemented across the project modules.
 
 ---
 
-## Directory Overview
+## 1. Directory Overview & Architecture
 
 ```text
 /workspaces/Hex-Studio/
 ├── src/
-│   ├── Main.elm                     -- Application entry point and main Elm architecture wiring
+│   ├── Main.elm                     -- Application entry point and Elm architecture wiring
 │   ├── Components/                  -- UI view components (Grid, Timeline, Content, LeftBox, RightBox, Panels, Menus)
 │   ├── Logic/
 │   │   └── App/
 │   │       ├── Model.elm            -- Main application state model
-│   │       ├── Msg.elm              -- Message types for Elm architecture updates
+│   │       ├── Msg.elm              -- Message types for Elm updates
 │   │       ├── Grid.elm             -- Hex grid geometry and stroke handling
 │   │       ├── PatternList/         -- Pattern sequence management
 │   │       ├── ImportExport/        -- Project import/export and text/give command serializers
 │   │       ├── Stack/               -- Evaluation VM stack execution engine (EvalStack.elm)
-│   │       ├── Patterns/            -- Registry of all Hex Casting patterns, operators, and math/stack actions
+│   │       ├── Patterns/            -- Registry and implementations of all Hex Casting patterns
+│   │       │   ├── PatternRegistry.elm -- Central registry mapping signatures to patterns & actions
+│   │       │   ├── OperatorUtils.elm   -- Action helpers (arity checks, input getters, constants)
+│   │       │   ├── Stack.elm           -- Stack manipulation (swap, rotate, dup, drop, fisherman, etc.)
+│   │       │   ├── Math.elm            -- Arithmetic, vector math, comparisons
+│   │       │   ├── Lists.elm           -- List construction, indexing, slice, car, cdr
+│   │       │   ├── Spells.elm          -- World spells, raycast, entity interactions
+│   │       │   ├── Selectors.elm       -- Entity and block selectors
+│   │       │   ├── MetaActions.elm     -- Introspection, retrospection, escape
+│   │       │   ├── ReadWrite.elm       -- Focus read/write, bookkeepers
+│   │       │   ├── GreatSpells.elm     -- Great spells (teleport, flight, etc.)
+│   │       │   ├── Circles.elm         -- Circles and slate actions
+│   │       │   └── Misc.elm            -- Miscellaneous utilities
 │   │       ├── Macros/              -- Macro expansion logic
-│   │       └── Utils/               -- General utility helpers (including array insertion, unshift, etc.)
-│   └── Ports/                       -- JavaScript interop ports (GIF generation, bounding boxes, hex number generation)
+│   │       └── Utils/               -- General utility helpers (array insertion, unshift, etc.)
+│   └── Ports/                       -- JavaScript interop ports
 ├── tests/
-│   ├── IrisTests.elm                -- Regression tests for Iris' Gambit (eval/cc) and continuation semantics
-│   └── FishermanTests.elm           -- Tests for Fisherman's Gambit and Fisherman's Gambit II (old and new behaviors)
+│   ├── IrisTests.elm                -- Regression tests for eval/cc and continuation semantics
+│   └── FishermanTests.elm           -- Tests for Fisherman's Gambit and Gambit II (positive & negative indices)
 ├── HexMod/                          -- Upstream Hex Casting mod reference codebase (Java/Kotlin)
-└── .github/workflows/               -- CI/CD build and test workflows (GitHub Actions)
+└── .github/workflows/               -- CI/CD build and test workflows
 ```
 
 ---
 
-## Code Flow: UI -> Parsing -> Evaluation -> Back
+## 2. Code Flow: UI -> Parsing -> Evaluation -> State & Timeline
 
-### 1. User Interface (UI) Layer
-- **Entry (`Main.elm`)**: Initializes the Elm `Browser.element` application, wiring up subscriptions, init state, update loop, and view rendering.
-- **Components (`Components/App/`)**:
-  - `Grid.elm` / `PatternAutoComplete.elm`: Users draw hex pattern strokes or select patterns from panels.
-  - `Timeline.elm` & `StackPanel.elm`: Display the evolution of the stack and execution timeline across pattern steps.
-  - `Menu.elm` & `FilePanel.elm`: Trigger project load/save, import/export, and pattern execution updates.
+1. **User Input / UI (`Components/`)**:
+   - The user draws a pattern stroke on the hex grid (`Grid.elm`) or selects/imports a pattern sequence.
+   - Pattern signatures and sequence lists are managed in `PatternList/` and project state (`Model.elm`).
+2. **Parsing & Resolution (`PatternRegistry.elm`, `ImportParser.elm`)**:
+   - Signatures are resolved to `Pattern` records via `getPatternFromSignature`, handling number literals (`aqaa...`), bookkeeper codes (`--`, `-+`), macros, and great spells.
+3. **VM Evaluation (`EvalStack.elm`)**:
+   - `applyToStackStopAtErrorOrHalt` processes the pattern list against the stack and casting context.
+   - `applyPatternToStack` executes individual pattern actions, managing introspection (`open_paren` / `close_paren`), consideration (`escape`), and meta-evaluation (`eval`, `eval_cc`, `for_each`).
+   - Continuation iotas (`ContinuationIota`) handle control flow escapes/jumps correctly.
+4. **State & Timeline (`Model.elm`, `Timeline.elm`)**:
+   - The resulting stack state, execution success, and step-by-step timeline of stack states are returned and stored in the application model to render the timeline and stack UI.
 
-### 2. Parsing & Project Representation
-- **Pattern Registry (`Logic/App/Patterns/PatternRegistry.elm`)**: Maps pattern signatures (angle sequences like `"ddad"`, `"qwaqde"`, `"aqae"`) to pattern metadata, display names, and internal action functions.
-- **Import/Export (`Logic/App/ImportExport/`)**:
-  - `ImportParser.elm` & `ExportAsText.elm`: Parse text representations or project files into internal `Iota` and `Pattern` data structures.
+---
 
-### 3. Evaluation & VM Layer (`Logic/App/Stack/EvalStack.elm`)
-- **`applyToStackStopAtErrorOrHalt`**: The primary entry point for executing a sequence of iotas/patterns against a casting context and stack.
-- **`applyToStackLoop` & `applyPatternToStack`**: Iterates through the pattern stream, managing control flow, introspection (`open_paren` / `close_paren`), consideration (`escape`), and meta-evaluation (`eval`, `eval/cc`, `for_each`).
-- **Continuation Semantics (`eval`, `eval/cc`)**:
-  - `eval` (`Hermes' Gambit`): Evaluates an evaluatable (IotaList, PatternIota, or ContinuationIota). When executing a jump `ContinuationIota`, it performs an escape/jump out of the current context.
-  - `eval_cc` (`Iris' Gambit`): Captures the remaining execution continuation as a `ContinuationIota`, pushes it, and executes the target expression.
+## 3. Comprehensive Inventory of Implemented Hexes in Hex-Studio
 
-### 4. Back to State & UI
-- **Model Update (`Model.elm` / `Msg.elm`)**: The result of stack evaluation (final stack, success status, timeline of intermediate states) is stored in the application model.
-- **View Render**: The UI components re-render to display the updated stack items, execution timeline, and visual feedback for any mishaps or successes.
+Hex-Studio implements a wide subset of Hex Casting patterns across its pattern modules:
+
+- **Stack Manipulation (`Stack.elm`)**:
+  - `swap` (Jester's Gambit), `rotate`, `rotate/reverse`, `dup` (Twin Gambit), `drop` (Seer's Gambit), `fisherman` (Fisherman's Gambit - supporting positive pull-up and negative move-down), `fisherman/copy` (Fisherman's Gambit II), `swizzle`, `duplicate/n`.
+- **Math & Arithmetic (`Math.elm`)**:
+  - `add`, `sub`, `mul`, `div`, `abs`, `pow`, `mod`, vector dot/cross products, vector length, vector normalization, comparisons (`equals`, `greater`, `less`, etc.).
+- **Lists (`Lists.elm`)**:
+  - `list/construct`, `list/concat`, `list/append`, `list/index`, `list/slice`, `list/size`, `empty_list` (Vacant Reflection), `list/car`, `list/cdr`.
+- **Reflection & Constants (`PatternRegistry.elm` / `OperatorUtils.elm`)**:
+  - `const/true`, `const/false`, `const/null`, unit vectors (`const/vec/0`, `+x`, `+y`, `+z`, `-x`, `-y`, `-z`), mathematical constants (`pi`, `tau`, `e`), number literals.
+- **Meta-Evaluation & Control Flow (`EvalStack.elm`, `MetaActions.elm`)**:
+  - `eval` (Hermes' Gambit), `eval_cc` (Iris' Gambit), `for_each` (Thoth's Gambit), `halt` (Charon's Gambit), `escape` (Consideration), `open_paren` (Introspection), `close_paren` (Retrospection), bookkeeper patterns.
+- **Read / Write (`ReadWrite.elm`)**:
+  - Focus `read` and `write`, item count/tag queries.
+- **Selectors & Spells (`Selectors.elm`, `Spells.elm`)**:
+  - Entity look, radius, block selection, raycast.
+- **Great Spells & Circles (`GreatSpells.elm`, `Circles.elm`)**:
+  - Flight, teleport, create water, destroy block, brainsweep, slate actions.

@@ -1,33 +1,49 @@
-# Divergences and Implementation Plan
+# Comprehensive Divergences and Implementation Plan
 
-This document outlines the current divergences between `Hex-Studio` (the Elm port) and upstream `HexMod`, followed by an implementation plan for achieving full semantic and feature parity.
+This document details all current architectural and functional divergences between `Hex-Studio` (the Elm port) and upstream `HexMod` (Minecraft Java/Kotlin mod), followed by a structured implementation plan to achieve full feature and semantic parity.
 
 ---
 
-## 1. Current Divergences
+## 1. Comprehensive Inventory of Divergences
 
-1. **Thoth's Gambit (`for_each`) & Complex Accumulators**:
-   - Upstream Hex Casting handles list iteration and loop continuation capture with robust frame tracking. While `for_each` is implemented in Elm, certain nested loop escape or mishap propagation edge cases may differ slightly from Kotlin JVM execution.
-2. **Great Spells & World Interaction**:
-   - Hex-Studio operates primarily as a stack/eval VM simulator (patterns, math, lists, stack manipulation, meta-evaluation). World-altering great spells (e.g., Akashic records, teleportation, entity/block manipulation) are stubbed or mocked in the browser/Elm environment because there is no live Minecraft world state.
-3. **Mishap System Granularity**:
-   - Upstream HexMod features a very fine-grained mishap system with localized error types and feedback. Hex-Studio implements core mishaps (`NotEnoughIotas`, `IncorrectIota`, `MathematicalError`, `CatastrophicFailure`), but some specific niche mishap conditions might use fallback errors.
+### A. Meta-Evaluation & Control Flow
+1. **Thoth's Gambit (`for_each`) Accumulator & Break Semantics**:
+   - *Upstream (`HexMod`)*: Allows breaking out of loops or accumulating state across iterations with precise handling of nested halts and continuation capture.
+   - *Hex-Studio*: Implements basic list iteration, but complex nested loop breaks and multi-level accumulator rollbacks differ in edge cases.
+2. **Mishap & Error Diagnostic Parity**:
+   - *Upstream (`HexMod`)*: Generates detailed, localized mishap messages with exact argument indices and contextual error data.
+   - *Hex-Studio*: Uses standard mishap types (`NotEnoughIotas`, `IncorrectIota`, `MathematicalError`, `CatastrophicFailure`) without fully localized diagnostic descriptions.
+
+### B. World Interaction & Great Spells
+1. **World State & Physics Simulation**:
+   - *Upstream (`HexMod`)*: Interacts directly with Minecraft blocks, entities, physics, server ticks, and player inventories.
+   - *Hex-Studio*: Simulates casting purely as a stack/eval VM in browser memory. World-affecting great spells (e.g., `greater/flight`, `greater/teleport`, `greater/destroy_block`, `greater/brainsweep`) are mocked or operate on a simplified mock casting context.
+2. **Akashic Records (`akashic/read`, `akashic/write`)**:
+   - *Upstream (`HexMod`)*: Accesses persistent global data storage across dimensions/servers.
+   - *Hex-Studio*: Uses an in-memory `libraries` dictionary in `CastingContext`.
+
+### C. Entity & Item Contexts
+1. **Trinkets, Foci, and Staff Integration**:
+   - *Upstream (`HexMod`)*: Inspects actual player inventory, equipped foci, cyphers, artifacts, and trinket slots.
+   - *Hex-Studio*: Relies on mock `entities` dictionary and `HeldItem` states in `CastingContext`.
 
 ---
 
 ## 2. Implementation Plan
 
-### Phase 1: Core VM & Continuation Semantics Parity (Completed)
-- [x] Refactor `ContinuationIota` to model jump continuation semantics correctly (escape/resume rather than raw stack overwrite).
-- [x] Ensure nested `eval/cc` and empty continuation jumps function identically to upstream Hex Casting models.
-- [x] Implement correct positive and negative indexing for Fisherman's Gambit (`fisherman`) and Fisherman's Gambit II (`fisherman/copy`).
+### Phase 1: Core VM & Pattern Semantics (Completed)
+- [x] Fix continuation jump semantics for `eval/cc` (`Iris' Gambit`) and `eval` (`Hermes' Gambit`).
+- [x] Correct positive and negative indexing behavior for Fisherman's Gambit (`fisherman`) and Fisherman's Gambit II (`fisherman/copy`).
+- [x] Centralize array insertion utility in `Utils.elm`.
 
-### Phase 2: Codebase Organization & Testing
-- [x] Centralize helper functions (like array insertion) into `Logic.App.Utils.Utils.elm`.
-- [x] Expand test coverage with dedicated test suites (`IrisTests.elm`, `FishermanTests.elm`).
-- [x] Update CI workflow (`build-deploy.yml`) to automatically execute all Elm tests.
+### Phase 2: Control Flow & Loop Refinement (In Progress / Planned)
+- [ ] **Task 2.1**: Enhance `for_each` (`Thoth's Gambit`) execution loop to mirror upstream accumulation and loop-break handling precisely.
+- [ ] **Task 2.2**: Improve mishap propagation during meta-evaluation so that inner errors correctly bubble up and trigger immediate failure without corrupting timelines.
 
-### Phase 3: Future Parity Enhancements (Roadmap)
-- [ ] Refine `for_each` (Thoth's Gambit) execution states to match upstream loop escape semantics.
-- [ ] Enhance macro expansion and library integration to mirror Akashic Record storage models more closely.
-- [ ] Expand error reporting and mishap details to match HexMod's exact diagnostic messages.
+### Phase 3: Context & Environment Simulation
+- [ ] **Task 3.1**: Expand `CastingContext` and mock entity/item management to support full focus read/write persistence across casting sessions.
+- [ ] **Task 3.2**: Add support for macro expansion persistence and project sharing formats matching upstream Hexbook / give-command exports.
+
+### Phase 4: Testing & Quality Assurance
+- [ ] **Task 4.1**: Add comprehensive unit test suites for all arithmetic, list, selection, and stack manipulation operators.
+- [ ] **Task 4.2**: Verify CI/CD pipeline (`build-deploy.yml`) successfully executes all tests on every push.
