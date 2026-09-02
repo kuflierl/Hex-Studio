@@ -3,6 +3,7 @@ module Logic.App.Utils.Utils exposing (..)
 import Array exposing (Array)
 import Html exposing (a)
 import Html.Events.Extra.Touch as Touch
+import Logic.App.Types exposing (Iota(..))
 
 
 
@@ -72,3 +73,37 @@ insert i value list =
 insertArray : Int -> a -> Array a -> Array a
 insertArray idx item array =
     Array.fromList (insert idx item (Array.toList array))
+
+
+getIotaType : Iota -> String
+getIotaType iota =
+    case iota of
+        Number _ ->
+            "number"
+
+        Vector _ ->
+            "vector"
+
+        Boolean _ ->
+            "bool"
+
+        Entity _ ->
+            "entity"
+
+        IotaList _ ->
+            "list"
+
+        PatternIota _ _ ->
+            "pattern"
+
+        Null ->
+            "null"
+
+        Garbage _ ->
+            "garbage"
+
+        OpenParenthesis _ ->
+            "list"
+
+        ContinuationIota _ ->
+            "continuation"

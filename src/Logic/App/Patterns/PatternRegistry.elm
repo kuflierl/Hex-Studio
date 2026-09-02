@@ -454,6 +454,8 @@ patternRegistry =
     , { signature = "qq", internalName = "less_eq", action = lessThanOrEqualTo, displayName = "Minimus Distillation II", outputOptions = [], selectedOutput = Nothing, startDirection = East }
     , { signature = "ad", internalName = "equals", action = equalTo, displayName = "Equality Distillation", outputOptions = [], selectedOutput = Nothing, startDirection = East }
     , { signature = "da", internalName = "not_equals", action = notEqualTo, displayName = "Inequality Distillation", outputOptions = [], selectedOutput = Nothing, startDirection = East }
+    , { signature = "wawdw", internalName = "type_equals", action = typeEquals, displayName = "Similarity Distillation", outputOptions = [], selectedOutput = Nothing, startDirection = East }
+    , { signature = "wdwaw", internalName = "type_not_equals", action = typeNotEquals, displayName = "Similarity Distillation II", outputOptions = [], selectedOutput = Nothing, startDirection = East }
     , { signature = "dw", internalName = "not", action = invertBool, displayName = "Negation Purification", outputOptions = [], selectedOutput = Nothing, startDirection = East }
     , { signature = "aw", internalName = "bool_coerce", action = boolCoerce, displayName = "Augur's Purification", outputOptions = [], selectedOutput = Nothing, startDirection = East }
     , { signature = "awdd", internalName = "if", action = ifBool, displayName = "Augur's Exaltation", outputOptions = [], selectedOutput = Nothing, startDirection = East }

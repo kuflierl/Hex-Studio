@@ -7,6 +7,7 @@ import Length
 import LineSegment2d exposing (vector)
 import Logic.App.Patterns.OperatorUtils exposing (action1Input, action2Inputs, action3Inputs, checkEquality, getAny, getBoolean, getInteger, getIntegerOrList, getIotaList, getNumber, getNumberOrVector, getVector)
 import Logic.App.Types exposing (ActionResult, CastingContext, Iota(..), Mishap(..))
+import Logic.App.Utils.Utils exposing (getIotaType)
 import Quantity exposing (Quantity(..))
 import Svg.Attributes exposing (azimuth)
 import Vector3d as Vec3d
@@ -902,3 +903,25 @@ ifBool stack ctx =
             )
     in
     action3Inputs stack ctx getBoolean getAny getAny action
+
+
+typeEquals : Array Iota -> CastingContext -> ActionResult
+typeEquals stack ctx =
+    let
+        action iota1 iota2 _ =
+            ( Array.fromList [ Boolean (getIotaType iota1 == getIotaType iota2) ]
+            , ctx
+            )
+    in
+    action2Inputs stack ctx getAny getAny action
+
+
+typeNotEquals : Array Iota -> CastingContext -> ActionResult
+typeNotEquals stack ctx =
+    let
+        action iota1 iota2 _ =
+            ( Array.fromList [ Boolean (getIotaType iota1 /= getIotaType iota2) ]
+            , ctx
+            )
+    in
+    action2Inputs stack ctx getAny getAny action

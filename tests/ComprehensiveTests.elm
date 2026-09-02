@@ -86,6 +86,33 @@ suite =
                             (Array.fromList [ pattern "dw" ])
                 in
                 Expect.equal result.stack (Array.fromList [ Boolean False ])
+            , test "Similarity Distillation (type_equals) compares types of two numbers" <|\_ ->
+                let
+                    result =
+                        applyToStackStopAtErrorOrHalt
+                            (Array.fromList [ Number 10, Number 5 ])
+                            emptyContext
+                            (Array.fromList [ pattern "wawdw" ])
+                in
+                Expect.equal result.stack (Array.fromList [ Boolean True ])
+            , test "Similarity Distillation (type_equals) compares number and bool" <|\_ ->
+                let
+                    result =
+                        applyToStackStopAtErrorOrHalt
+                            (Array.fromList [ Boolean True, Number 5 ])
+                            emptyContext
+                            (Array.fromList [ pattern "wawdw" ])
+                in
+                Expect.equal result.stack (Array.fromList [ Boolean False ])
+            , test "Similarity Distillation II (type_not_equals) compares number and bool" <|\_ ->
+                let
+                    result =
+                        applyToStackStopAtErrorOrHalt
+                            (Array.fromList [ Boolean True, Number 5 ])
+                            emptyContext
+                            (Array.fromList [ pattern "wdwaw" ])
+                in
+                Expect.equal result.stack (Array.fromList [ Boolean True ])
             ]
         , describe "Stack Manipulation Operations"
             [ test "Jester's Gambit (swap) swaps top two iotas" <|\_ ->
