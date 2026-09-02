@@ -20,6 +20,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
       - uses: jorelali/setup-elm@v6
         with:
             elm-version: 0.19.1
@@ -39,8 +43,11 @@ jobs:
       - name: Compile
         run: elm make src/Main.elm --output gen/source.js --optimize
 
+      - name: Install elm-test
+        run: npm install -g elm-test@0.19.1-revision17
+
       - name: Test
-        run: echo "Testing not yet implemented"
+        run: elm-test
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
