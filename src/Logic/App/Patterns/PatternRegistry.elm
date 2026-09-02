@@ -143,7 +143,19 @@ getPatternFromName maybeMacros name =
                                 |> Maybe.withDefault ""
                                 |> String.trim
                     in
-                    if regexMatch == String.trim name then
+                    if String.toLower name == "novice's gambit" || String.toLower name == "novice" then
+                        ( parseBookkeeperCode "v", Cmd.none )
+
+                    else if String.startsWith "Bookkeeper's Gambit" name then
+                        let
+                            code =
+                                String.replace "Bookkeeper's Gambit:" "" name
+                                    |> String.replace "Bookkeeper's Gambit" ""
+                                    |> String.trim
+                        in
+                        ( parseBookkeeperCode code, Cmd.none )
+
+                    else if regexMatch == String.trim name then
                         ( parseBookkeeperCode name, Cmd.none )
 
                     else
@@ -217,6 +229,19 @@ parseBookkeeperCode code =
         , action = mask [ "-" ]
         , metaAction = None
         , displayName = "Bookkeeper's Gambit: -"
+        , color = accent1
+        , outputOptions = []
+        , selectedOutput = Nothing
+        , active = True
+        , startDirection = East
+        }
+
+    else if code == "v" then
+        { signature = "a"
+        , internalName = "mask"
+        , action = mask [ "v" ]
+        , metaAction = None
+        , displayName = "Novice's Gambit"
         , color = accent1
         , outputOptions = []
         , selectedOutput = Nothing
@@ -434,6 +459,7 @@ patternRegistry =
     , { signature = "ddad", internalName = "fisherman", action = fisherman, displayName = "Fisherman's Gambit", outputOptions = [], selectedOutput = Nothing, startDirection = East }
     , { signature = "aada", internalName = "fisherman/copy", action = fishermanCopy, displayName = "Fisherman's Gambit II", outputOptions = [], selectedOutput = Nothing, startDirection = East }
     , { signature = "qaawdde", internalName = "swizzle", action = swizzle, displayName = "Swindler's Gambit", outputOptions = [], selectedOutput = Nothing, startDirection = East } -- do this
+    , { signature = "a", internalName = "mask", action = mask [ "v" ], displayName = "Novice's Gambit", outputOptions = [], selectedOutput = Nothing, startDirection = East }
     , { signature = "waaw", internalName = "add", action = add, displayName = "Additive Distillation", outputOptions = [], selectedOutput = Nothing, startDirection = East }
     , { signature = "wddw", internalName = "sub", action = subtract, displayName = "Subtractive Distillation", outputOptions = [], selectedOutput = Nothing, startDirection = East }
     , { signature = "waqaw", internalName = "mul_dot", action = mulDot, displayName = "Multiplicative Distillation", outputOptions = [], selectedOutput = Nothing, startDirection = East }
@@ -586,6 +612,7 @@ patternRegistry =
             )
         |> (++) greatSpellRegistry
         |> (++) metapatternRegistry
+        |> (++) (List.map parseBookkeeperCode [ "v-", "-v", "vv" ])
 
 
 metapatternRegistry : List Pattern

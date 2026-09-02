@@ -4,7 +4,7 @@ import Array exposing (Array)
 import Dict
 import Expect exposing (Expectation)
 import Test exposing (Test, describe, test)
-import Logic.App.Patterns.PatternRegistry exposing (getPatternFromSignature)
+import Logic.App.Patterns.PatternRegistry exposing (getPatternFromName, getPatternFromSignature)
 import Logic.App.Stack.EvalStack exposing (applyToStackStopAtErrorOrHalt)
 import Logic.App.Types exposing (CastingContext, Iota(..), Mishap(..))
 
@@ -179,5 +179,19 @@ suite =
                             (Array.fromList [ pattern "aweaqa" ])
                 in
                 Expect.equal result.stack (Array.fromList [ IotaList (Array.fromList [ Number 1, Number 2, Number 3 ]) ])
+            ]
+        , describe "Bookkeeper's & Novice's Gambit"
+            [ test "Novice's Gambit search returns bookkeeper pattern" <|\_ ->
+                let
+                    ( pat, _ ) =
+                        getPatternFromName Nothing "Novice's Gambit"
+                in
+                Expect.equal pat.displayName "Novice's Gambit"
+            , test "Bookkeeper's Gambit search returns bookkeeper pattern" <|\_ ->
+                let
+                    ( pat, _ ) =
+                        getPatternFromName Nothing "Bookkeeper's Gambit: --"
+                in
+                Expect.equal pat.internalName "mask"
             ]
         ]
