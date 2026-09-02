@@ -71,5 +71,5 @@ suite =
                         emptyContext
                         (Array.fromList [ pattern "aada" ])
             in
-            Expect.equal result.stack (Array.fromList [ Number 10, Number 10, Number 20, Number 30 ])
+            Expect.equal result.stack (Array.fromList [ Number 10, Number 20, Number 10, Number 30 ])
         ]
