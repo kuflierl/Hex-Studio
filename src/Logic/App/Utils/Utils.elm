@@ -67,3 +67,8 @@ insert i value list =
     List.drop i list
         |> (::) value
         |> (++) (List.take i list)
+
+
+insertArray : Int -> a -> Array a -> Array a
+insertArray idx item array =
+    Array.fromList (insert idx item (Array.toList array))
