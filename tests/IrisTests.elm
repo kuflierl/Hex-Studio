@@ -51,7 +51,7 @@ suite =
                         emptyContext
             in
             Expect.equal result.stack (Array.fromList [ Number 7, Number 9 ])
-        , test "Nested eval/cc goto executes remaining outer commands and leaves two true values" <|\_ ->
+        , test "Nested eval/cc goto with Vacant Reflection leaves two true values" <|\_ ->
             let
                 pattern sig =
                     PatternIota (getPatternFromSignature Nothing sig) False
@@ -61,9 +61,11 @@ suite =
                         Array.empty
                         emptyContext
                         (Array.fromList
-                            [ pattern "qqaeaae"
+                            [ pattern "qqq"
+                            , pattern "qqaeaae"
                             , pattern "qwaqde"
                             , pattern "aqae"
+                            , pattern "eee"
                             , pattern "deaqq"
                             , pattern "aawdd"
                             , pattern "deaqq"
