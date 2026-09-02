@@ -4,7 +4,8 @@
         {
             "type": "shell",
             "label": "launch dev server",
-            "command": "elm-live src/Main.elm --open --  --output gen/source.js"
+            "command": "elm-live src/Main.elm --open --  --output gen/source.js --optimize",
+            "problemMatcher": []
         },
         {
             "type": "shell",
