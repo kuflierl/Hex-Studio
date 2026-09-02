@@ -472,7 +472,7 @@ patternRegistry =
     , { signature = "waweaqa", internalName = "or_bit", action = orBit, displayName = "Unifying Distillation", outputOptions = [], selectedOutput = Nothing, startDirection = East }
     , { signature = "dwaeaqa", internalName = "xor_bit", action = xorBit, displayName = "Exclusionary Distillation", outputOptions = [], selectedOutput = Nothing, startDirection = East }
     , { signature = "dweaqa", internalName = "not_bit", action = notBit, displayName = "Inversion Purification", outputOptions = [], selectedOutput = Nothing, startDirection = East }
-    , { signature = "aweaqa", internalName = "to_set", action = toSet, displayName = "Uniqueness Purification", outputOptions = [], selectedOutput = Nothing, startDirection = East }
+    , { signature = "aweaqa", internalName = "unique", action = unique, displayName = "Uniqueness Purification", outputOptions = [], selectedOutput = Nothing, startDirection = East }
     , { signature = "de", internalName = "print", action = print, displayName = "Reveal", outputOptions = [], selectedOutput = Nothing, startDirection = East }
     , { signature = "aawaawaa", internalName = "explode", action = explode, displayName = "Explosion", outputOptions = [], selectedOutput = Nothing, startDirection = East }
     , { signature = "ddwddwdd", internalName = "explode/fire", action = explodeFire, displayName = "Fireball", outputOptions = [], selectedOutput = Nothing, startDirection = East }

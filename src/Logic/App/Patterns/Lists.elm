@@ -277,3 +277,28 @@ deconstruct stack ctx =
             )
     in
     action1Input stack ctx getIotaList action
+
+
+unique : Array Iota -> CastingContext -> ActionResult
+unique stack ctx =
+    let
+        constructUnique iota out =
+            if List.any (checkEquality iota) (Array.toList out) then
+                out
+
+            else
+                Array.push iota out
+
+        action iota _ =
+            ( case iota of
+                IotaList list ->
+                    IotaList (Array.foldl constructUnique Array.empty list)
+                        |> Array.repeat 1
+
+                _ ->
+                    Garbage CatastrophicFailure
+                        |> Array.repeat 1
+            , ctx
+            )
+    in
+    action1Input stack ctx getIotaList action

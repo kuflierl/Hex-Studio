@@ -610,31 +610,6 @@ notBit stack ctx =
     action1Input stack ctx getInteger action
 
 
-toSet : Array Iota -> CastingContext -> ActionResult
-toSet stack ctx =
-    let
-        constructSet iota out =
-            if List.any (checkEquality iota) (Array.toList out) then
-                out
-
-            else
-                Array.push iota out
-
-        action iota _ =
-            ( case iota of
-                IotaList list ->
-                    IotaList (Array.foldl constructSet Array.empty list)
-                        |> Array.repeat 1
-
-                _ ->
-                    Garbage CatastrophicFailure
-                        |> Array.repeat 1
-            , ctx
-            )
-    in
-    action1Input stack ctx getIotaList action
-
-
 constructVector : Array Iota -> CastingContext -> ActionResult
 constructVector stack ctx =
     let
