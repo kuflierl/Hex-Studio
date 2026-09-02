@@ -166,4 +166,18 @@ suite =
                 in
                 Expect.equal result.stack (Array.fromList [ Null ])
             ]
+        , describe "List & Set Operations"
+            [ test "Uniqueness Purification (unique) removes duplicates from list" <|\_ ->
+                let
+                    listIota =
+                        IotaList (Array.fromList [ Number 1, Number 2, Number 2, Number 3, Number 1 ])
+
+                    result =
+                        applyToStackStopAtErrorOrHalt
+                            (Array.fromList [ listIota ])
+                            emptyContext
+                            (Array.fromList [ pattern "aweaqa" ])
+                in
+                Expect.equal result.stack (Array.fromList [ IotaList (Array.fromList [ Number 1, Number 2, Number 3 ]) ])
+            ]
         ]
