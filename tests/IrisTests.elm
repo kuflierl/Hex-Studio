@@ -61,14 +61,14 @@ suite =
                         Array.empty
                         emptyContext
                         (Array.fromList
-                            [ pattern "qqq"
-                            , pattern "qqaeaae"
-                            , pattern "qwaqde"
-                            , pattern "aqae"
-                            , pattern "eee"
-                            , pattern "deaqq"
-                            , pattern "aawdd"
-                            , pattern "deaqq"
+                            [ pattern "qqq" -- Introspection
+                            , pattern "qqaeaae" -- Vacant Reflection
+                            , pattern "qwaqde" -- Iris' Gambit
+                            , pattern "aqae" -- True Reflection
+                            , pattern "eee" -- Retrospection
+                            , pattern "deaqq" -- Hermes Gambit
+                            , pattern "aawdd" -- Jester's Gambit
+                            , pattern "deaqq" -- Hermes Gambit
                             ]
                         )
             in
@@ -83,15 +83,41 @@ suite =
                         Array.empty
                         emptyContext
                         (Array.fromList
-                            [ pattern "qqq"
-                            , pattern "aqae"
-                            , pattern "aawdd"
-                            , pattern "deaqq"
-                            , pattern "aqae"
-                            , pattern "eee"
-                            , pattern "qwaqde"
+                            [ pattern "qqq" -- Introspection
+                            , pattern "aqae" -- True Reflection
+                            , pattern "aawdd" -- Jester's Gambit
+                            , pattern "deaqq" -- Hermes Gambit
+                            , pattern "aqae" -- True Reflection
+                            , pattern "eee" -- Retrospection
+                            , pattern "qwaqde" -- Iris' Gambit
                             ]
                         )
             in
             Expect.equal result.stack (Array.fromList [ Boolean True ])
+        , test "User iris nested example leaves exactly two true values on stack from empty stack" <|\_ ->
+            let
+                pattern sig =
+                    PatternIota (getPatternFromSignature Nothing sig) False
+
+                result =
+                    applyToStackStopAtErrorOrHalt
+                        Array.empty
+                        emptyContext
+                        (Array.fromList
+                            [ pattern "qqq" -- Introspection
+                            , pattern "qqq" -- Introspection
+                            , pattern "aadaa" -- Gemini Decomposition
+                            , pattern "deaqq" -- Hermes Gambit
+                            , pattern "dedq" -- False Reflection
+                            , pattern "eee" -- Retrospection
+                            , pattern "qwaqde" -- Iris' Gambit
+                            , pattern "aqae" -- True Reflection
+                            , pattern "eee" -- Retrospection
+                            , pattern "deaqq" -- Hermes Gambit
+                            , pattern "aawdd" -- Jester's Gambit
+                            , pattern "deaqq" -- Hermes Gambit
+                            ]
+                        )
+            in
+            Expect.equal result.stack (Array.fromList [ Boolean True, Boolean True ])
         ]
