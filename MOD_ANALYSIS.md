@@ -1,99 +1,102 @@
-# Comprehensive Mod Analysis: Upstream Hex Casting (`HexMod`)
+# Comprehensive Mod Analysis & Missing Hexes Catalog
 
-This document provides a complete, exhaustive catalog and behavior analysis of **every** hex action (spell/pattern) present in the upstream Hex Casting mod (`HexMod`), serving as the reference standard for casting semantics, stack manipulation, meta-evaluation, and world interactions.
-
----
-
-## 1. Stack Manipulation
-- **Jester's Gambit (`swap`)**: Swaps the top two iotas on the stack ($A, B \rightarrow B, A$).
-- **Rotation (`rotate`)**: Rotates the top 3 iotas ($A, B, C \rightarrow B, C, A$ or similar rotation).
-- **Reverse Rotation (`rotate/reverse`)**: Rotates the top 3 iotas in reverse.
-- **Twin Gambit (`dup`)**: Duplicates the top iota ($A \rightarrow A, A$).
-- **Seer's Gambit (`drop`)**: Removes the top iota ($A \rightarrow$).
-- **Alchemist's Gambit (`nuck`)**: Rotates or removes items deeper in the stack.
-- **Fisherman's Gambit (`fisherman`)**: Grabs the element at index $N$ (positive index 0-indexed from top) and brings it to the top. If $N$ is negative, moves the top element down $|N|$ steps.
-- **Fisherman's Gambit II (`fisherman/copy`)**: Copies the element at index $N$ to the top, or copies the top element down $|N|$ steps if $N$ is negative.
-- **Swindler's Gambit (`swizzle`)**: Reorders stack elements based on index lists.
-- **Duplicate N (`duplicate/n`)**: Duplicates the top $N$ items.
-- **Abacus (`stack/len`)**: Pushes the current size of the stack.
+This document provides a complete catalog of upstream Hex Casting (`HexMod`) actions, their behaviors, and an explicit inventory of hexes currently missing from `Hex-Studio`.
 
 ---
 
-## 2. Arithmetic & Math
-- **Sum (`add`) / Sub (`sub`) / Mul (`mul`) / Div (`div`)**: Standard binary operations on numbers or vectors.
-- **Power (`pow`) / Root / Log**: Exponentiation and logarithmic operations.
-- **Absolute Value (`abs`) / Negate (`neg`)**: Unary number/vector transforms.
-- **Modulo (`mod`)**: Remainder operation.
-- **Floor (`floor`) / Ceiling (`ceil`) / Round (`round`)**: Number quantization.
-- **Dot Product (`dot`) / Cross Product (`cross`) / Length (`len`) / Normalize (`normalize`)**: Vector operations.
+## 1. Complete Inventory of Upstream Hexes (`HexMod`)
+
+### A. Stack Manipulation
+- `swap` (Jester's Gambit)
+- `rotate` (Rotation Gambit)
+- `rotate_reverse` (Rotation Gambit II)
+- `duplicate` (Gemini Decomposition)
+- `over` (Prospector's Gambit)
+- `tuck` (Undertaker's Gambit)
+- `2dup` (Dioscuri Gambit)
+- `stack_len` (Flock's Reflection)
+- `duplicate_n` (Gemini Gambit)
+- `fisherman` (Fisherman's Gambit)
+- `fisherman/copy` (Fisherman's Gambit II)
+- `swizzle` (Swindler's Gambit)
+- `unique` (Unique stack manipulation)
+
+### B. Arithmetic & Math
+- `add` (Additive Distillation)
+- `sub` (Subtractive Distillation)
+- `mul` (Multiplicative Distillation)
+- `div` (Division Distillation)
+- `abs` (Length Purification)
+- `pow` (Power Distillation)
+- `floor` (Floor Purification)
+- `ceil` (Ceiling Purification)
+- `construct_vec` (Vector Exaltation)
+- `deconstruct_vec` (Vector Disintegration)
+- `coerce_axial` (Axial Purification)
+- `sin`, `cos`, `tan`, `arcsin`, `arccos`, `arctan`, `arctan2`
+- `logarithm` (Logarithmic Distillation)
+- `modulo` (Modulus Distillation)
+- `and_bit`, `or_bit` (Bitwise operations)
+
+### C. Logic & Comparison
+- `and` (Conjunction Distillation)
+- `or` (Disjunction Distillation)
+- `not` (Negation Purification)
+- `xor` (Exclusion Distillation)
+- `greater` (Maximus Distillation)
+- `less` (Minimus Distillation)
+- `greater_eq` (Maximus Distillation II)
+- `less_eq` (Minimus Distillation II)
+- `equals` (Equality Distillation)
+- `not_equals` (Inequality Distillation)
+- `type_equals`, `type_not_equals` (Type checking)
+- `bool_coerce` (Augur's Purification)
+- `if` (Augur's Exaltation)
+- `random` (Entropy Reflection)
+
+### D. Selectors & Entity / World Queries
+- `get_caster` (Mind's Reflection)
+- `entity_pos/eye`, `entity_pos/foot` (Compass' Purification I & II)
+- `get_entity_look` (Alidade's Purification)
+- `get_entity_height` (Stadiometer's Purification)
+- `get_entity_velocity` (Pace Purification)
+- `raycast` (Archer's Distillation)
+- `raycast/axis` (Architect's Distillation)
+- `raycast/entity` (Scout's Distillation)
+- `get_media` (Media queries)
+
+### E. Spells & World Interaction
+- `print` (Chat output)
+- `explode`, `explode/fire` (Explosions)
+- `add_motion`, `blink` (Movement spells)
+- `break_block`, `place_block`
+- `colorize`, `cycle_variant`
+- `create_water`, `destroy_water`
+- `ignite`, `extinguish`
+- `conjure_block`, `conjure_light`
+- `bonemeal`
+- `recharge`, `erase`, `edify`, `beep`
+- `craft/cypher`, `craft/trinket`, `craft/artifact`, `craft/battery`
+- Potion spells (`potion/weakness`, `levitation`, `wither`, `poison`, `slowness`, `regeneration`, `night_vision`, `absorption`, `haste`, `strength`)
+
+### F. Great Spells
+- `lightning` (Summon Lightning)
+- `summon_rain`, `dispel_rain`
+- `teleport` (Greater Teleport)
+- `sentinel/create/great` (Summon Greater Sentinel)
+- `craft/battery` (Craft Phial)
+- `brainsweep` (Flay Mind)
+- `akashic/read`, `akashic/write`, `akashic/organs` (Akashic records)
 
 ---
 
-## 3. Logic & Comparison
-- **Equality (`equals`) / Inequality (`not_equals`)**: Compares two iotas for structural equality.
-- **Greater (`greater`) / Greater or Equal (`greater_or_equal`) / Less / Less or Equal**: Numeric comparisons.
-- **And (`and`) / Or (`or`) / Xor (`xor`) / Not (`not`)**: Boolean operations.
-- **Condition (`if`)**: Takes a boolean and two iotas (or lists), choosing one based on the condition.
+## 2. Complete List of Missing Hexes in `Hex-Studio`
 
----
-
-## 4. Reflection & Constants
-- **True Reflection (`const/true`) / False Reflection (`const/false`)**: Pushes boolean values.
-- **Nullary Reflection (`const/null`)**: Pushes `Null`.
-- **Vector Reflections (`const/vec/0`, `const/vec/px`, `const/vec/py`, `const/vec/pz`, etc.)**: Pushes standard unit vectors or zero vector.
-- **Constant Reflections (`pi`, `tau`, `e`)**: Pushes mathematical constants.
-- **Number Literals (`number_literal`)**: Encodes floats/doubles via angle signatures.
-
----
-
-## 5. Lists
-- **List Construct (`list/construct`)**: Creates a list from $N$ items on the stack.
-- **List Concat (`list/concat`)**: Concatenates two lists.
-- **List Append (`list/append`)**: Appends an item to a list.
-- **List Index (`list/index`)**: Retrieves an element from a list at an index.
-- **List Slice (`list/slice`)**: Extracts a sublist.
-- **List Size (`list/size`)**: Pushes the length of a list.
-- **Vacant Reflection (`empty_list`)**: Pushes an empty list `[]`.
-- **Car (`list/car`) / Cdr (`list/cdr`)**: Head and tail operations on lists.
-
----
-
-## 6. Selectors & Entity / World Queries
-- **Entity Look (`get/entity/look`)**: Finds entities in the caster's line of sight.
-- **Entity Radius (`get/entity/radius`)**: Finds entities within a bounding sphere.
-- **Entity Filters (`living`, `animal`, `monster`, `item`, `player`)**: Filters entity sets.
-- **Block Select (`get/block/select`) / Raycast (`get/block/raycast`)**: Queries world blocks and raycast hits.
-- **Entity Properties (`entity/pos`, `entity/eye_pos`, `entity/look`, `entity/velocity`, `entity/rotation`)**: Inspects entity attributes.
-
----
-
-## 7. Meta-Evaluation & Control Flow
-- **Hermes' Gambit (`eval`)**: Removes an evaluatable (list, pattern, or continuation) from the stack and casts/evaluates it.
-- **Iris' Gambit (`eval_cc`)**: Captures the current continuation and pushes a jump continuation before evaluating a target expression. When executed, a continuation acts as a jump/escape out of the current evaluatable.
-- **Thoth's Gambit (`for_each`)**: Iterates over a list, applying an evaluatable to each element with accumulator support.
-- **Charon's Gambit (`halt`)**: Halts execution of the current spell.
-- **Consideration (`consideration`)**: Escapes/considers an iota without executing it during meta-eval.
-- **Introspection (`open_paren`) / Retrospection (`close_paren`)**: Groups patterns into a list literal on the stack.
-- **Bookkeeper's Gambit (`bookkeeper`)**: Stack manipulation via dot/dash patterns (e.g. `--`, `-+`, etc.).
-
----
-
-## 8. Read / Write & Foci
-- **Read (`read`) / Write (`write`)**: Interacts with Focus items (storing and recalling iotas).
-- **Item Queries (`item/remove`, `item/count`, `item/tag`)**: Inventory and item inspections.
-
----
-
-## 9. Great Spells
-- **Flight (`greater/flight`)**: Grants temporary creative flight to the caster.
-- **Teleport (`greater/teleport`)**: Moves entities across space.
-- **Create Water (`greater/create_water`)**: Spawns water blocks.
-- **Destroy Block (`greater/destroy_block`)**: Breaks blocks in the world.
-- **Craft (`greater/craft`)**: Executes recipe crafting via magic.
-- **Brainsweep (`greater/brainsweep`)**: Converts villagers into specialized workers.
-- **Akashic Records (`greater/akashic/read`, `greater/akashic/write`)**: Interacts with persistent global storage networks.
-
----
-
-## 10. Circles of Power
-- Patterns for carving slate, powering media circles, and running autonomous continuous spell loops.
+The following actions present in `HexMod` are currently missing or stubbed in `Hex-Studio`:
+1. **Type Checking**: `type_equals`, `type_not_equals`
+2. **Advanced Stack/List Utils**: `unique`
+3. **Advanced Math**: `arctan2`, bitwise operations (`and_bit`, `or_bit`), and trigonometric variations (`arcsin`, `arccos`, `arctan`, `tan`).
+4. **World/Entity Spells**: `print`, `explode`, `explode/fire`, `add_motion`, `blink`, `place_block`, `colorize`, `cycle_variant`, `destroy_water`, `ignite`, `extinguish`, `conjure_block`, `conjure_light`, `bonemeal`, `recharge`, `erase`, `edify`, `beep`.
+5. **Crafting & Artifact Spells**: `craft/cypher`, `craft/trinket`, `craft/artifact`.
+6. **Potion Spells**: All potion application spells (`weakness`, `levitation`, `wither`, `poison`, `slowness`, `regeneration`, `night_vision`, `absorption`, `haste`, `strength`).
+7. **Great Spells (Full World Effect)**: `lightning`, `summon_rain`, `dispel_rain`, `sentinel/create/great`, `akashic/organs`.
